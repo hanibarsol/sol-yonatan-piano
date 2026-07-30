@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>המשפחה של סול - שיעור + פסנתר</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         :root { --white-w: 50px; --black-w: 33px; }
         body, html {
@@ -121,16 +122,52 @@
             -webkit-touch-callout: none;
             user-select: none;
         }
+
+        #calib-panel {
+            position: fixed;
+            top: 8px;
+            left: 8px;
+            z-index: 50;
+            background: rgba(0,0,0,0.75);
+            border-radius: 10px;
+            padding: 8px;
+            max-width: 220px;
+            touch-action: auto;
+            font-family: Arial, sans-serif;
+            color: #fff;
+        }
+        #calib-panel button {
+            touch-action: auto;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 2px;
+        }
+        #calib-mark { background: #ffeb3b; color: #000; font-weight: bold; width: 100%; padding: 12px; font-size: 16px; }
+        #calib-undo { background: #555; color: #fff; }
+        #calib-clear { background: #555; color: #fff; }
+        #calib-copy { background: #4caf50; color: #fff; }
+        #calib-list {
+            touch-action: auto;
+            max-height: 110px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-top: 6px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 6px;
+            padding: 4px;
+            direction: ltr;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
 
 <div id="app">
     <div id="video-wrap">
-        <iframe id="lesson-video"
-            src="https://www.youtube.com/embed/EIVsEIAVNZo?enablejsapi=1&playsinline=1&rel=0"
-            allow="autoplay; encrypted-media"
-            allowfullscreen></iframe>
+        <div id="lesson-video"></div>
     </div>
     <div id="speed-bar">
         <button id="speed-minus" class="speed-step-btn">－</button>
@@ -144,11 +181,34 @@
 
 <div id="start-screen">לחצי כאן כדי להתחיל את השיעור והפסנתר</div>
 
+<div id="calib-panel">
+    <button id="calib-mark">סמן עכשיו ▶</button>
+    <div style="display:flex; justify-content:space-between;">
+        <button id="calib-undo">בטל אחרון</button>
+        <button id="calib-clear">נקה הכל</button>
+    </div>
+    <button id="calib-copy" style="width:100%">העתק תוצאות</button>
+    <div id="calib-list"></div>
+</div>
+
 <script>
     const startScreen = document.getElementById('start-screen');
     const pianoElement = document.getElementById('piano');
     const pianoContainer = document.getElementById('piano-container');
-    const videoFrame = document.getElementById('lesson-video');
+
+    // Real YouTube IFrame API (instead of one-way postMessage guesses) so we can
+    // reliably read back the current playback time for the calibration tool below.
+    let player = null;
+    let pendingPlay = false;
+    window.onYouTubeIframeAPIReady = function () {
+        player = new YT.Player('lesson-video', {
+            videoId: 'EIVsEIAVNZo',
+            playerVars: { playsinline: 1, rel: 0 },
+            events: {
+                onReady: () => { if (pendingPlay) player.playVideo(); }
+            }
+        });
+    };
 
     startScreen.addEventListener('click', async () => {
         await Tone.start();
@@ -156,11 +216,8 @@
         startScreen.style.display = 'none';
         console.log("Audio Context started");
 
-        // Ask the (already-loaded) YouTube iframe to start playing, inside the same
-        // click handler, so the browser attributes the user gesture to the video too.
-        try {
-            videoFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-        } catch (e) {}
+        if (player && player.playVideo) player.playVideo();
+        else pendingPlay = true;
     });
 
     // Speed stepper: minus/plus move in 0.25 steps between 0.5x-1.5x,
@@ -174,9 +231,7 @@
     function applySpeed(index) {
         speedIndex = Math.max(0, Math.min(speedSteps.length - 1, index));
         const rate = speedSteps[speedIndex];
-        try {
-            videoFrame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'setPlaybackRate', args: [rate] }), '*');
-        } catch (e) {}
+        if (player && player.setPlaybackRate) player.setPlaybackRate(rate);
         const isNormal = rate === 1;
         speedResetBtn.textContent = isNormal ? 'מהירות' : `×${rate}`;
         speedResetBtn.classList.toggle('is-normal', isNormal);
@@ -185,6 +240,37 @@
     speedMinusBtn.addEventListener('click', () => applySpeed(speedIndex - 1));
     speedPlusBtn.addEventListener('click', () => applySpeed(speedIndex + 1));
     speedResetBtn.addEventListener('click', () => applySpeed(2));
+
+    // --- Calibration tool: tap "mark now" every time a character hits the green
+    // line, and it logs the exact video timestamp. Not part of the kids' UI —
+    // this is a dev tool for building the note-timing map for this song.
+    const calibMarks = [];
+    const calibListEl = document.getElementById('calib-list');
+    const calibMarkBtn = document.getElementById('calib-mark');
+    const calibUndoBtn = document.getElementById('calib-undo');
+    const calibClearBtn = document.getElementById('calib-clear');
+    const calibCopyBtn = document.getElementById('calib-copy');
+
+    function renderCalibList() {
+        calibListEl.innerHTML = calibMarks
+            .map((t, i) => `${i + 1}. ${t.toFixed(2)}s`)
+            .join('<br>');
+        calibListEl.scrollTop = calibListEl.scrollHeight;
+    }
+
+    calibMarkBtn.addEventListener('click', () => {
+        if (!player || !player.getCurrentTime) return;
+        calibMarks.push(player.getCurrentTime());
+        renderCalibList();
+    });
+    calibUndoBtn.addEventListener('click', () => { calibMarks.pop(); renderCalibList(); });
+    calibClearBtn.addEventListener('click', () => { calibMarks.length = 0; renderCalibList(); });
+    calibCopyBtn.addEventListener('click', () => {
+        const text = calibMarks.map(t => t.toFixed(2)).join(', ');
+        navigator.clipboard.writeText(text).catch(() => {});
+        calibCopyBtn.textContent = 'הועתק!';
+        setTimeout(() => { calibCopyBtn.textContent = 'העתק תוצאות'; }, 1200);
+    });
 
     const characterImages = ["דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png", "דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png"];
 
