@@ -115,7 +115,12 @@
 
         .key.active { background-color: #ffeb3b !important; }
         .key.due { box-shadow: inset 0 0 0 5px #4caf50; }
-        .key.correct-flash { background-color: #4caf50 !important; transition: background-color 0.1s; }
+        .key.correct-flash {
+            background-color: #2196f3 !important;
+            transform: scale(1.06);
+            transition: transform 0.1s;
+            z-index: 40;
+        }
 
         .character-img {
             width: 80%;
@@ -291,12 +296,15 @@
     let songHit = false;
     const keyByNote = {};
 
-    const characterImages = ["דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png", "דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png"];
+    const characterImages = ["דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png"];
 
     // Map every note to its real recorded sample (24 files exist in sounds/,
     // the previous version only wired up 4 of them and let Tone.js pitch-shift the rest).
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const octaves = [3, 4];
+    // This test page uses a single octave: with two octaves, the same character
+    // appeared twice and it wasn't clear which copy was the "real" target key,
+    // which made the correct-press flash look like it wasn't responding at all.
+    const octaves = [4];
 
     function noteToFile(note, octave) {
         const letter = note[0].toLowerCase();
@@ -368,7 +376,7 @@
                         if (t >= cur.time - NOTE_LEAD && t <= cur.time + NOTE_TAIL) {
                             songHit = true;
                             key.classList.add('correct-flash');
-                            setTimeout(() => key.classList.remove('correct-flash'), 400);
+                            setTimeout(() => key.classList.remove('correct-flash'), 550);
                         }
                     }
                 }
@@ -400,7 +408,7 @@
     // Responsive key sizing: always fit 2 octaves (14 white keys) to the
     // container's actual width, so nothing overflows on a phone screen.
     function sizeKeys() {
-        const totalWhiteKeys = 14;
+        const totalWhiteKeys = 7;
         const containerWidth = pianoContainer.clientWidth;
         let whiteW = Math.floor(containerWidth / totalWhiteKeys);
         whiteW = Math.max(24, Math.min(whiteW, 60));
@@ -410,6 +418,11 @@
     }
     window.addEventListener('resize', sizeKeys);
     sizeKeys();
+    // Re-measure once layout has fully settled — an initial synchronous call
+    // can occasionally read a stale/incorrect container width before the
+    // viewport is fully applied.
+    window.addEventListener('load', sizeKeys);
+    requestAnimationFrame(sizeKeys);
 
     // Polls playback time, lights up the currently-due key (green outline,
     // matching the video's own green-line cue), and advances past notes that
