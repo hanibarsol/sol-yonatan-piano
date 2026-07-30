@@ -114,6 +114,8 @@
         }
 
         .key.active { background-color: #ffeb3b !important; }
+        .key.due { box-shadow: inset 0 0 0 5px #4caf50; }
+        .key.correct-flash { background-color: #4caf50 !important; transition: background-color 0.1s; }
 
         .character-img {
             width: 80%;
@@ -272,6 +274,23 @@
         setTimeout(() => { calibCopyBtn.textContent = 'העתק תוצאות'; }, 1200);
     });
 
+    // --- Note-timing feedback for "יונתן הקטן", built from Hani's calibration
+    // marks (video timestamps where each character hits the green line) plus
+    // the character/note sequence she gave for those marks. All in octave 4
+    // since the melody only uses do-re-mi-fa-sol and stays in one octave.
+    const solfegeToLetter = { do: 'C', re: 'D', mi: 'E', fa: 'F', sol: 'G', la: 'A', si: 'B' };
+    const songTimes = [19.39, 22.63, 25.41, 27.94, 30.96, 33.96, 36.67, 39.70, 42.50, 45.50, 48.19, 50.81, 53.95, 57.98, 61.23, 64.13, 66.67, 69.59, 72.35, 75.23, 78.39, 81.33, 84.29, 87.16, 91.65, 93.96, 96.36, 98.51, 100.73, 103.07, 105.56, 107.86, 110.16, 112.39, 114.40, 116.43, 118.58, 120.82, 123.88, 126.39, 129.16, 131.99, 134.47, 137.28, 140.08, 142.95, 145.84, 148.46, 150.89];
+    const songSyllables = ['sol', 'mi', 'mi', 'fa', 're', 're', 'do', 're', 'mi', 'fa', 'sol', 'sol', 'sol', 'sol', 'mi', 'mi', 'fa', 're', 're', 'do', 'mi', 'sol', 'sol', 'do', 're', 're', 're', 're', 're', 'mi', 'fa', 'mi', 'mi', 'mi', 'mi', 'mi', 'fa', 'sol', 'sol', 'mi', 'mi', 'fa', 're', 're', 'do', 'mi', 'sol', 'sol', 'do'];
+    const songNotes = songTimes.map((t, i) => ({ time: t, note: solfegeToLetter[songSyllables[i]] + '4' }));
+
+    // How early the target key lights up before its moment (lets a child react
+    // to the visual cue), and how long after it still counts as a correct hit.
+    const NOTE_LEAD = 0.6;
+    const NOTE_TAIL = 0.45;
+    let songIdx = 0;
+    let songHit = false;
+    const keyByNote = {};
+
     const characterImages = ["דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png", "דו.png", "רה.png", "מי.png", "פה.png", "סול.png", "לה.png", "סי.png"];
 
     // Map every note to its real recorded sample (24 files exist in sounds/,
@@ -326,6 +345,7 @@
             key.className = `key ${isBlack ? 'black-key' : 'white-key'}`;
             key.dataset.note = fullNote;
             key.dataset.isPlaying = "false";
+            keyByNote[fullNote] = key;
 
             if (!isBlack) {
                 const img = document.createElement('img');
@@ -340,6 +360,18 @@
                 key.dataset.isPlaying = "true";
                 key.classList.add('active');
                 try { sampler.triggerAttack(fullNote); } catch (err) {}
+
+                if (!songHit && songIdx < songNotes.length && player && player.getCurrentTime) {
+                    const cur = songNotes[songIdx];
+                    if (fullNote === cur.note) {
+                        const t = player.getCurrentTime();
+                        if (t >= cur.time - NOTE_LEAD && t <= cur.time + NOTE_TAIL) {
+                            songHit = true;
+                            key.classList.add('correct-flash');
+                            setTimeout(() => key.classList.remove('correct-flash'), 400);
+                        }
+                    }
+                }
             };
 
             const stopNote = () => {
@@ -378,6 +410,25 @@
     }
     window.addEventListener('resize', sizeKeys);
     sizeKeys();
+
+    // Polls playback time, lights up the currently-due key (green outline,
+    // matching the video's own green-line cue), and advances past notes that
+    // were missed once their window closes — no penalty, it just moves on.
+    setInterval(() => {
+        if (!player || !player.getCurrentTime || songIdx >= songNotes.length) return;
+        const t = player.getCurrentTime();
+        const cur = songNotes[songIdx];
+        const keyEl = keyByNote[cur.note];
+        const inWindow = t >= cur.time - NOTE_LEAD && t <= cur.time + NOTE_TAIL;
+
+        if (keyEl) keyEl.classList.toggle('due', inWindow);
+
+        if (t > cur.time + NOTE_TAIL) {
+            if (keyEl) keyEl.classList.remove('due');
+            songIdx++;
+            songHit = false;
+        }
+    }, 100);
 </script>
 </body>
 </html>
