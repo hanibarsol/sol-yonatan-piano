@@ -146,6 +146,7 @@
         }
 
         #calib-panel {
+            display: none;
             position: fixed;
             top: 8px;
             left: 8px;
@@ -217,6 +218,12 @@
     const startScreen = document.getElementById('start-screen');
     const pianoElement = document.getElementById('piano');
     const pianoContainer = document.getElementById('piano-container');
+
+    // Calibration tool is dev-only: hidden from students, shown only when
+    // building/checking a song's timing map via ?admin=1 in the URL.
+    if (new URLSearchParams(location.search).get('admin') === '1') {
+        document.getElementById('calib-panel').style.display = 'block';
+    }
 
     // Real YouTube IFrame API (instead of one-way postMessage guesses) so we can
     // reliably read back the current playback time for the calibration tool below.
