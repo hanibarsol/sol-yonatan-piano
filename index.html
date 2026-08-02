@@ -760,9 +760,14 @@
         const containerWidth = Math.max(220, rawWidth - reserved);
 
         let whiteW = Math.floor(containerWidth / totalWhiteKeys);
-        whiteW = Math.max(30, Math.min(whiteW, 130));
+        whiteW = Math.max(30, Math.min(whiteW, 150));
 
-        const maxKeyH = Math.max(160, window.innerHeight * 0.42);
+        // Reserve a sane minimum for the video + speed bar + cabinet chrome
+        // (lip/instrument row/padding), then let the piano have everything
+        // else — instead of an arbitrary fraction that kept it small.
+        const minVideoH = 200;
+        const chromeH = 130;
+        const maxKeyH = Math.max(160, window.innerHeight - minVideoH - chromeH);
         let keyH = whiteW * 4.2;
         if (keyH > maxKeyH) {
             keyH = maxKeyH;
