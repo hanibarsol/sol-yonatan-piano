@@ -78,16 +78,22 @@
             box-sizing: border-box;
             touch-action: none !important;
         }
+        /* Grid instead of flex: the outer two columns are the same fixed
+           width (one holds the knob, the other is an empty mirror), so the
+           cabinet in the middle column is truly centered on the page —
+           centering [knob + cabinet] as one flex group instead left the
+           piano visibly off-center, shifted by roughly the knob's width. */
         #rig {
-            display: flex;
-            align-items: flex-end;
+            display: grid;
+            grid-template-columns: 96px auto 96px;
+            align-items: end;
             justify-content: center;
             gap: 16px;
             width: 100%;
             overflow-x: auto;
             padding: 0 8px;
         }
-        .knob-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; touch-action: auto; padding-bottom: 6px; }
+        .knob-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; touch-action: auto; padding-bottom: 6px; }
         .knob-label { font-size: 12px; color: rgba(255,255,255,0.5); }
         .knob {
             width: var(--knob-size, 46px); height: var(--knob-size, 46px); border-radius: 50%;
@@ -282,6 +288,7 @@
                     <div class="piano" id="piano"></div>
                 </div>
             </div>
+            <div></div>
         </div>
     </div>
 </div>
@@ -751,10 +758,11 @@
     // height is derived from key width (not a fixed vh) so proportions stay
     // realistic at any size, and the whole cabinet is capped by available
     // vertical space so it never crowds the video out on a short window.
-    const knobWrapEl = document.querySelector('.knob-wrap');
     function sizeKeys() {
         const totalWhiteKeys = 7;
-        const reserved = (knobWrapEl ? knobWrapEl.offsetWidth : 0) + 90; // knob + gaps + cabinet/keywell chrome
+        // Two 96px mirror columns (one holds the knob, one is empty so the
+        // cabinet stays centered) + grid gaps + cabinet/keywell padding.
+        const reserved = 96 * 2 + 16 * 2 + 40;
         const rawWidth = Math.min(pianoContainer.clientWidth, window.innerWidth);
         const containerWidth = Math.max(220, rawWidth - reserved);
 
