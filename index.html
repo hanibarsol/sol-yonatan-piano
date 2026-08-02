@@ -770,11 +770,15 @@
         whiteW = Math.max(30, Math.min(whiteW, 150));
 
         // Split the space left after the speed bar/chrome roughly evenly
-        // between video and piano, instead of giving the video only its
-        // bare minimum and handing everything else to the piano.
+        // between video and piano — but never let the piano take so much
+        // height that the video area's aspect ratio goes far past 16:9.
+        // On a wide-but-short window, giving the piano a flat 50% used to
+        // squeeze the video into a sliver, which YouTube then pillarboxes
+        // (black bars on the sides) since it keeps the video's real aspect.
         const chromeH = 130;
         const availableH = Math.max(320, window.innerHeight - chromeH);
-        const maxKeyH = Math.max(160, availableH * 0.5);
+        const minVideoH = rawWidth / 2.2;
+        const maxKeyH = Math.max(160, Math.min(availableH * 0.5, availableH - minVideoH));
         let keyH = whiteW * 4.2;
         if (keyH > maxKeyH) {
             keyH = maxKeyH;
