@@ -69,34 +69,34 @@
         #speed-reset.is-normal { background: #ffeb3b; color: #000; font-weight: bold; }
 
         #piano-container {
-            flex: 0 0 48vh;
+            flex: 0 0 auto;
             display: flex;
             justify-content: center;
-            align-items: stretch;
+            align-items: center;
             width: 100%;
-            padding-top: 1vh;
+            padding: 1.5vh 0;
             box-sizing: border-box;
             touch-action: none !important;
         }
         #rig {
             display: flex;
-            align-items: stretch;
+            align-items: flex-end;
             justify-content: center;
-            gap: 12px;
+            gap: 16px;
             width: 100%;
             overflow-x: auto;
             padding: 0 8px;
         }
-        .knob-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; touch-action: auto; }
-        .knob-label { font-size: 10px; color: rgba(255,255,255,0.5); }
+        .knob-wrap { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; touch-action: auto; padding-bottom: 6px; }
+        .knob-label { font-size: 12px; color: rgba(255,255,255,0.5); }
         .knob {
-            width: 46px; height: 46px; border-radius: 50%;
+            width: var(--knob-size, 46px); height: var(--knob-size, 46px); border-radius: 50%;
             background: radial-gradient(circle at 35% 30%, #565c66, #1c1e22 72%);
             box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.18), inset 0 -2px 4px rgba(0,0,0,0.4);
             position: relative; cursor: grab; touch-action: none;
         }
         .knob-indicator {
-            position: absolute; bottom: 50%; left: 50%; width: 3px; height: 16px; margin-left: -1.5px;
+            position: absolute; bottom: 50%; left: 50%; width: 4px; height: 34%; margin-left: -2px;
             background: var(--teal); border-radius: 2px; transform-origin: 50% 100%;
             box-shadow: 0 0 4px rgba(111,214,201,0.85);
         }
@@ -105,52 +105,48 @@
             width: fit-content;
             display: flex; flex-direction: column;
             background: linear-gradient(180deg, var(--modern-hi) 0%, var(--modern-lo) 100%);
-            border-radius: 12px;
-            padding: 10px 10px 0;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 8px 20px rgba(0,0,0,0.4);
+            border-radius: 14px;
+            padding: 12px 12px 0;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), 0 10px 26px rgba(0,0,0,0.45);
         }
         #cabinet-lip {
             flex: 0 0 auto;
-            height: 3px; border-radius: 3px; margin-bottom: 8px;
+            height: 4px; border-radius: 3px; margin-bottom: 10px;
             background: linear-gradient(90deg, var(--teal), #bdf2ea, var(--teal));
             box-shadow: 0 0 6px rgba(111,214,201,0.6);
         }
         #keywell {
-            flex: 1 1 auto;
-            min-height: 0;
             background: linear-gradient(180deg, #100f13 0%, var(--modern-lo) 100%);
-            border-radius: 8px 8px 0 0;
-            padding: 8px 8px 0;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 10px 0;
             display: flex; flex-direction: column; align-items: stretch;
         }
         #instrument-panel {
             flex: 0 0 auto;
-            display: flex; justify-content: center; flex-wrap: wrap; gap: 6px;
-            padding-bottom: 8px;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 10px;
+            padding-bottom: 12px;
         }
         .inst-btn {
             touch-action: auto;
-            display: flex; align-items: center; gap: 5px;
+            display: flex; align-items: center; gap: 7px;
             background: rgba(0,0,0,0.32);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 7px;
-            padding: 5px 9px;
-            font-size: 11px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 9px;
+            padding: 8px 16px;
+            font-size: 15px;
             font-family: Arial, sans-serif;
-            color: rgba(255,255,255,0.55);
+            color: rgba(255,255,255,0.6);
             cursor: pointer;
         }
-        .inst-btn .led { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.15); }
+        .inst-btn .led { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.15); }
         .inst-btn.active { color: #fff; border-color: rgba(255,255,255,0.22); }
         .inst-btn.active .led { background: var(--gold); box-shadow: 0 0 5px 2px rgba(224,168,63,0.75); }
         .piano {
             align-self: center;
-            flex: 1 1 auto;
-            min-height: 0;
             display: flex;
             position: relative;
             direction: ltr;
-            height: 100%;
+            height: var(--key-h, 220px);
             touch-action: none !important;
         }
 
@@ -749,19 +745,37 @@
         });
     });
 
-    // Responsive key sizing: fit 7 white keys to the width actually left
-    // over after the volume knob and cabinet chrome, so nothing overflows.
+    // Responsive key sizing: fit 7 white keys to the width actually left over
+    // after the volume knob and cabinet chrome. Unlike the old version, width
+    // has no low cap here — on a big screen the piano is meant to look like a
+    // real, prominent instrument, not a small widget lost in empty space. Key
+    // height is derived from key width (not a fixed vh) so proportions stay
+    // realistic at any size, and the whole cabinet is capped by available
+    // vertical space so it never crowds the video out on a short window.
     const knobWrapEl = document.querySelector('.knob-wrap');
     function sizeKeys() {
         const totalWhiteKeys = 7;
-        const reserved = (knobWrapEl ? knobWrapEl.offsetWidth : 0) + 60; // knob + gaps + cabinet/keywell padding
+        const reserved = (knobWrapEl ? knobWrapEl.offsetWidth : 0) + 90; // knob + gaps + cabinet/keywell chrome
         const rawWidth = Math.min(pianoContainer.clientWidth, window.innerWidth);
-        const containerWidth = Math.max(200, rawWidth - reserved);
+        const containerWidth = Math.max(220, rawWidth - reserved);
+
         let whiteW = Math.floor(containerWidth / totalWhiteKeys);
-        whiteW = Math.max(24, Math.min(whiteW, 60));
+        whiteW = Math.max(30, Math.min(whiteW, 130));
+
+        const maxKeyH = Math.max(160, window.innerHeight * 0.42);
+        let keyH = whiteW * 4.2;
+        if (keyH > maxKeyH) {
+            keyH = maxKeyH;
+            whiteW = Math.max(30, Math.floor(keyH / 4.2));
+        }
+
         const blackW = Math.round(whiteW * 0.495);
+        const knobSize = Math.max(40, Math.min(78, Math.round(whiteW * 0.85)));
+
         document.documentElement.style.setProperty('--white-w', whiteW + 'px');
         document.documentElement.style.setProperty('--black-w', blackW + 'px');
+        document.documentElement.style.setProperty('--key-h', keyH + 'px');
+        document.documentElement.style.setProperty('--knob-size', knobSize + 'px');
     }
     window.addEventListener('resize', sizeKeys);
     sizeKeys();
