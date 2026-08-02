@@ -748,7 +748,8 @@
     function sizeKeys() {
         const totalWhiteKeys = 7;
         const reserved = (knobWrapEl ? knobWrapEl.offsetWidth : 0) + 60; // knob + gaps + cabinet/keywell padding
-        const containerWidth = Math.max(200, pianoContainer.clientWidth - reserved);
+        const rawWidth = Math.min(pianoContainer.clientWidth, window.innerWidth);
+        const containerWidth = Math.max(200, rawWidth - reserved);
         let whiteW = Math.floor(containerWidth / totalWhiteKeys);
         whiteW = Math.max(24, Math.min(whiteW, 60));
         const blackW = Math.round(whiteW * 0.495);
@@ -762,6 +763,8 @@
     // viewport is fully applied.
     window.addEventListener('load', sizeKeys);
     requestAnimationFrame(sizeKeys);
+    setTimeout(sizeKeys, 400);
+    setTimeout(sizeKeys, 1200);
 
     // Polls playback time, lights up the currently-due key (green outline,
     // matching the video's own green-line cue), and advances past notes that
