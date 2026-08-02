@@ -184,9 +184,8 @@
         .key.due { box-shadow: inset 0 0 0 5px #4caf50; }
         .key.correct-flash {
             background-color: #ffab00 !important;
-            box-shadow: 0 0 18px 6px rgba(255, 171, 0, 0.75);
-            transform: scale(1.05);
-            transition: transform 0.15s, box-shadow 0.15s;
+            box-shadow: 0 0 10px 2px rgba(255, 171, 0, 0.45);
+            transition: background-color 0.25s ease-out, box-shadow 0.25s ease-out;
             z-index: 40;
         }
         @keyframes star-pop {
@@ -762,12 +761,12 @@
         let whiteW = Math.floor(containerWidth / totalWhiteKeys);
         whiteW = Math.max(30, Math.min(whiteW, 150));
 
-        // Reserve a sane minimum for the video + speed bar + cabinet chrome
-        // (lip/instrument row/padding), then let the piano have everything
-        // else — instead of an arbitrary fraction that kept it small.
-        const minVideoH = 200;
+        // Split the space left after the speed bar/chrome roughly evenly
+        // between video and piano, instead of giving the video only its
+        // bare minimum and handing everything else to the piano.
         const chromeH = 130;
-        const maxKeyH = Math.max(160, window.innerHeight - minVideoH - chromeH);
+        const availableH = Math.max(320, window.innerHeight - chromeH);
+        const maxKeyH = Math.max(160, availableH * 0.5);
         let keyH = whiteW * 4.2;
         if (keyH > maxKeyH) {
             keyH = maxKeyH;
