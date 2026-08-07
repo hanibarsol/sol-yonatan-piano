@@ -554,6 +554,18 @@
         applyAudioState();
     });
 
+    // This lesson only: the video asks kids to play along from 00:13 to
+    // 02:33, so the page switches into practice mode automatically at the
+    // start of that stretch and back to watch automatically once it ends —
+    // instead of relying on the child to notice and tap the מצב buttons
+    // themselves. Each edge only fires once per play-through (not a
+    // continuous lock), so a manual tap in between still works normally;
+    // both reset when the song is replayed from the start.
+    const AUTO_PRACTICE_START = 13;
+    const AUTO_PRACTICE_END = 153;
+    let autoEnterFired = false;
+    let autoExitFired = false;
+
     // Calibration tool is dev-only: hidden from students, shown only when
     // building/checking a song's timing map via ?admin=1 in the URL.
     if (new URLSearchParams(location.search).get('admin') === '1') {
@@ -637,6 +649,9 @@
             songIdx = 0;
             songHit = false;
             resetKeyFills();
+            autoEnterFired = false;
+            autoExitFired = false;
+            setMode('watch');
             isPaused = false;
             playPauseBtn.textContent = '⏸';
             return;
@@ -1262,8 +1277,19 @@
     // tile are both practice-mode-only: in watch mode nothing is being
     // graded, so nothing should look like it's demanding a correct key.
     setInterval(() => {
-        if (!player || !player.getCurrentTime || songIdx >= songNotes.length) return;
+        if (!player || !player.getCurrentTime) return;
         const t = player.getCurrentTime();
+
+        if (!autoEnterFired && mode === 'watch' && t >= AUTO_PRACTICE_START && t < AUTO_PRACTICE_END) {
+            autoEnterFired = true;
+            setMode('practice');
+        }
+        if (!autoExitFired && mode === 'practice' && t >= AUTO_PRACTICE_END) {
+            autoExitFired = true;
+            setMode('watch');
+        }
+
+        if (songIdx >= songNotes.length) return;
         const cur = songNotes[songIdx];
         const keyEl = keyByNote[cur.note];
         const inWindow = t >= cur.time - NOTE_LEAD && t <= cur.time + NOTE_TAIL;
