@@ -1483,6 +1483,11 @@
             setMode('watch');
         }
 
+        // Same reason as the auto watch/practice guard above — this loop
+        // keeps polling the (possibly paused) player clock even under
+        // "לנסות לבד", and would otherwise re-apply a stale "due" highlight
+        // moments after solo mode had just cleared it.
+        if (soloMode) return;
         if (songIdx >= songNotes.length) return;
         const cur = songNotes[songIdx];
         const keyEl = keyByNote[cur.note];
