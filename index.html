@@ -26,7 +26,12 @@
         }
         #app { display: flex; flex-direction: column; width: 100%; height: 100%; }
 
-        #start-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.85); color: white; display: flex; justify-content: center; align-items: center; z-index: 100; cursor: pointer; font-size: 22px; text-align: center; padding: 20px; box-sizing: border-box; }
+        /* Invisible full-screen tap catcher, not a visible "click to start"
+           prompt — browsers (iOS Safari especially) still require a real
+           user gesture before audio can play at all, so this stays in the
+           DOM to guarantee that first tap is captured, it just no longer
+           looks like a separate screen the child has to get past. */
+        #start-screen { position: fixed; inset: 0; background: transparent; z-index: 100; cursor: pointer; }
 
         #video-wrap { flex: 1 1 auto; min-height: 0; background: #000; touch-action: auto; transition: flex-basis 0.25s ease; }
         #video-wrap iframe { width: 100%; height: 100%; border: 0; touch-action: auto; }
@@ -540,7 +545,7 @@
     </div>
 </div>
 
-<div id="start-screen">לחצו כאן כדי להתחיל את השיעור והפסנתר</div>
+<div id="start-screen"></div>
 
 <div id="calib-panel">
     <button id="calib-mark">סמן עכשיו ▶</button>
