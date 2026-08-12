@@ -685,14 +685,17 @@
         audioToggleWrap.classList.toggle('hidden', mode !== 'practice');
         // The water-fill result on each key is practice-mode feedback — left
         // showing in watch mode it just reads as a stray blue stain on the
-        // keys. Fade it out of view (without erasing the progress itself)
-        // so it's back the moment practice starts again.
+        // keys.
         Object.values(keyFillEls).forEach(el => { el.style.opacity = mode === 'practice' ? '1' : '0'; });
         if (mode === 'watch') {
             activeTiles.forEach(tile => tile.remove());
             activeTiles.clear();
             dismissPracticeHint();
         } else {
+            // Every fresh entry into practice starts clean — otherwise a key
+            // already "full" from an earlier attempt this session stays full
+            // forever, which stops meaning anything as feedback.
+            resetKeyFills();
             showPracticeHint();
         }
         applyAudioState();
