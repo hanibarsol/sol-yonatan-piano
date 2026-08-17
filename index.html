@@ -51,39 +51,6 @@
             text-decoration: none;
             touch-action: auto;
         }
-        #home-btn-circle {
-            width: 74px;
-            height: 74px;
-            border-radius: 50%;
-            overflow: hidden;
-            background: #1b1e23;
-            border: 3px solid var(--teal);
-            box-shadow: 0 0 10px 3px rgba(111,214,201,0.8), 0 0 0 2px rgba(0,0,0,0.5);
-        }
-        #home-btn-circle img { width: 100%; height: 100%; object-fit: contain; display: block; }
-        #home-btn-label {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: rgba(0,0,0,0.6);
-            border-radius: 10px;
-            padding: 3px 8px;
-            font-size: 12px;
-            line-height: 1.35;
-            color: #fff;
-            text-align: center;
-            white-space: nowrap;
-            font-family: Arial, sans-serif;
-        }
-        #home-btn-line2 { display: flex; align-items: center; gap: 3px; }
-        #home-btn-label svg { flex: 0 0 auto; width: 12px; height: 12px; }
-
-        @media (max-width: 640px) {
-            #home-btn { top: 6px; right: 6px; gap: 3px; transform: none; }
-            #home-btn-circle { width: 46px; height: 46px; border-width: 2px; }
-            #home-btn-label { font-size: 9px; padding: 2px 5px; }
-            #home-btn-label svg { width: 9px; height: 9px; }
-        }
 
         #video-wrap { flex: 1 1 auto; min-height: 0; background: #000; touch-action: auto; transition: flex-basis 0.25s ease; }
         #video-wrap iframe { width: 100%; height: 100%; border: 0; touch-action: auto; }
