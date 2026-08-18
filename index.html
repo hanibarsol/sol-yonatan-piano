@@ -711,7 +711,11 @@
     const staffWrap = document.getElementById('staff-wrap');
     const staffInner = document.getElementById('staff-inner');
     const staffNoteEls = [];
-    const STAFF_PITCH_Y = { C: 60, D: 54, E: 48, F: 42, G: 36, A: 30, B: 24 };
+    // Pitch as steps of half a line-space, counted down from the top staff
+    // line: the staff lines land on the even steps, and דו sits on its own
+    // ledger line 10 steps down, below the staff proper.
+    const STAFF_PITCH_STEP = { C: 10, D: 9, E: 8, F: 7, G: 6, A: 5, B: 4 };
+    const STAFF_LINE_STEPS = [0, 2, 4, 6, 8];
 
     function buildStaff() {
         staffInner.innerHTML = '';
@@ -722,23 +726,30 @@
         // landscape screen that can come out bigger than the wrap is tall —
         // cap them to what actually fits, so they never overlap/clip
         // instead of just reading the notation smaller.
-        const idealNoteSize = whiteWpx * 0.5;
-        const maxNoteSizeForHeight = Math.max(16, (wrapH - 16) / 3);
-        const noteSize = Math.min(idealNoteSize, maxNoteSizeForHeight);
-        // The 5 staff lines + ledger span 36px (STAFF_PITCH_Y's own range),
-        // plus each note's own radius poking past the top/bottom line.
-        const offsetY = Math.max(10, (wrapH - (36 + noteSize)) / 2);
-        [0, 12, 24, 36, 48].forEach(y => {
+        const noteSize = Math.min(whiteWpx * 0.5, Math.max(16, wrapH * 0.45));
+        // Half a line-space, in px. 6 is the full-size look; on a short strip
+        // the line spacing is what gives way, not the characters — the
+        // characters are what a 4-year-old actually reads off this staff.
+        const unit = Math.min(6, Math.max(2, (wrapH - 6 - noteSize / 2) / 10));
+        // What has to fit is the real drawn extent: from whichever sits higher
+        // — the top staff line, or a character poking above it — down to the
+        // bottom of דו's character, a full ledger line below the staff.
+        // Measuring only as far as the last staff line is what left a gap
+        // above and cut the low characters off at the bottom of the strip.
+        const topExtent = Math.min(0, STAFF_PITCH_STEP.B * unit - noteSize / 2);
+        const bottomExtent = STAFF_PITCH_STEP.C * unit + noteSize / 2;
+        const offsetY = -topExtent + Math.max(0, (wrapH - (bottomExtent - topExtent)) / 2);
+        STAFF_LINE_STEPS.forEach(step => {
             const line = document.createElement('div');
             line.className = 'staff-line';
-            line.style.top = (y + offsetY) + 'px';
+            line.style.top = (step * unit + offsetY) + 'px';
             staffInner.appendChild(line);
         });
         const spacing = noteSize * 1.35;
         staffInner.style.width = (songNotes.length * spacing + 40) + 'px';
         songNotes.forEach((n, i) => {
             const letter = n.note[0];
-            const y = STAFF_PITCH_Y[letter] + offsetY;
+            const y = STAFF_PITCH_STEP[letter] * unit + offsetY;
             const x = 30 + i * spacing;
             if (letter === 'C') {
                 const ledger = document.createElement('div');
@@ -832,7 +843,6 @@
             staffWrap.classList.add('active');
             soloIdx = 0;
             staffNoteEls.forEach(el => el.classList.remove('done'));
-            buildStaff();
             dismissPracticeHint();
             // Leftover state from the timed practice mode shouldn't carry
             // into a fresh "לנסות לבד" attempt.
@@ -849,7 +859,13 @@
             noteLane.classList.toggle('hidden', mode !== 'practice');
             videoWrap.classList.toggle('mini', mode === 'practice');
         }
+        // sizeKeys() is what sets --staff-h, so the staff strip only takes on
+        // its real height here. Laying the notes out before this point
+        // measured the strip at its previous height and positioned דו for a
+        // taller box than it got — a gap above the lines, low characters cut
+        // off below.
         sizeKeys();
+        if (soloMode) buildStaff();
     });
 
     // This lesson only: the video asks kids to play along from 00:13 to
