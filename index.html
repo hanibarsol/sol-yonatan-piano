@@ -764,7 +764,7 @@
             staffInner.appendChild(note);
             staffNoteEls.push(note);
         });
-        updateStaffScroll();
+        updateStaffScroll(true);
     }
 
     function markStaffNoteDone(index) {
@@ -772,9 +772,51 @@
         if (el) el.classList.add('done');
     }
 
-    function updateStaffScroll() {
-        const cur = staffNoteEls[soloIdx];
-        if (cur) cur.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
+    // The staff used to advance with scrollIntoView({behavior:'smooth'}),
+    // which lands as a hard jump rather than movement: several mobile
+    // browsers ignore the smooth option on that call outright, and a child
+    // playing quickly restarts the animation before the previous one has
+    // finished, so it stutters even where it is honoured. This runs one
+    // continuous loop that eases the row toward whichever note is current,
+    // re-reading the target every frame — so the characters glide instead
+    // of hopping, and the note being played stays centred at any pace.
+    let staffScrollRaf = 0;
+
+    function staffScrollTarget() {
+        const cur = staffNoteEls[soloIdx] || staffNoteEls[staffNoteEls.length - 1];
+        if (!cur) return null;
+        const max = Math.max(0, staffInner.offsetWidth - staffWrap.clientWidth);
+        // .staff-note is translate(-50%) off its own left, so offsetLeft is
+        // already the character's visual centre.
+        return Math.min(max, Math.max(0, cur.offsetLeft - staffWrap.clientWidth / 2));
+    }
+
+    function updateStaffScroll(instant) {
+        const target = staffScrollTarget();
+        if (target === null) return;
+        // Building or resizing the staff isn't the child advancing — there is
+        // nothing to glide from, so land on the spot.
+        if (instant) {
+            if (staffScrollRaf) { cancelAnimationFrame(staffScrollRaf); staffScrollRaf = 0; }
+            staffWrap.scrollLeft = target;
+            return;
+        }
+        // A loop already in flight picks the new note up on its next frame;
+        // starting a second one would fight it for the same scrollLeft.
+        if (staffScrollRaf) return;
+        const step = () => {
+            const to = staffScrollTarget();
+            if (to === null) { staffScrollRaf = 0; return; }
+            const diff = to - staffWrap.scrollLeft;
+            if (Math.abs(diff) < 0.5) {
+                staffWrap.scrollLeft = to;
+                staffScrollRaf = 0;
+                return;
+            }
+            staffWrap.scrollLeft += diff * 0.18;
+            staffScrollRaf = requestAnimationFrame(step);
+        };
+        staffScrollRaf = requestAnimationFrame(step);
     }
 
     soloBtn.addEventListener('click', () => {
