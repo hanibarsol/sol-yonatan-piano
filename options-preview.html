@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+<title>שלוש אפשרויות ליונתן הקטן</title>
+<style>
+    :root { --teal: #6fd6c9; --gold: #e0a83f; --panel: #1a1a1a; --panel2: #232323; }
+    html, body {
+        margin: 0; padding: 0; background: #111; color: #fff;
+        font-family: Arial, sans-serif; -webkit-text-size-adjust: 100%;
+        -webkit-touch-callout: none; -webkit-user-select: none; user-select: none;
+    }
+    .wrap { max-width: 560px; margin: 0 auto; padding: 0 0 60px; }
+    header { padding: 20px 16px 6px; }
+    header h1 { margin: 0 0 8px; font-size: 19px; }
+    header p { margin: 0; font-size: 13.5px; line-height: 1.65; color: #bbb; }
+    header b { color: #ddd; font-weight: normal; }
+
+    .card { margin: 16px 10px; background: var(--panel); border-radius: 16px; overflow: hidden; }
+    .card h2 { margin: 0; padding: 14px 16px 4px; font-size: 16.5px; color: var(--teal); }
+    .card .how { margin: 0; padding: 0 16px 10px; font-size: 13px; line-height: 1.6; color: #bbb; }
+    .card .note { margin: 0; padding: 9px 16px; font-size: 12.5px; line-height: 1.6;
+        color: #8f8f8f; background: rgba(255,255,255,0.03); border-top: 1px solid #2c2c2c; }
+    .card .note b { color: #c9c9c9; font-weight: normal; }
+    .stage { padding: 8px 8px 12px; }
+
+    .row { display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: nowrap; }
+    .sn { position: relative; flex: 0 0 auto; }
+    .sn-av {
+        position: relative; z-index: 1; width: 100%; height: 100%;
+        border-radius: 50%; overflow: hidden;
+        border: 2px solid rgba(0,0,0,0.85); background: #333;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.5), 0 0 10px 2px rgba(255,255,255,0.55);
+    }
+    .sn-av img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; -webkit-user-drag: none; }
+    .water { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .water svg { width: 100%; height: 100%; display: block; }
+    .ring { position: absolute; inset: -5px; border-radius: 50%; z-index: 0; pointer-events: none;
+        filter: drop-shadow(0 0 5px rgba(111,214,201,.95)); opacity: 0; transition: opacity .18s ease; }
+    .ring::before {
+        content: ""; position: absolute; inset: 0; border-radius: 50%;
+        background: conic-gradient(transparent 0deg 45deg, var(--teal) 45deg calc(var(--p,0) * 360deg), transparent 0deg);
+        -webkit-mask: radial-gradient(closest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+        mask: radial-gradient(closest-side, transparent calc(100% - 3.5px), #000 calc(100% - 3px));
+    }
+    .sn.holding .ring { opacity: calc(var(--p,0) * 7); }
+    .sn.next .sn-av { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(224,168,63,.3); }
+    .sn.done .sn-av { border-color: var(--teal); box-shadow: 0 0 10px 2px rgba(111,214,201,.6); }
+
+    .say { text-align: center; font-size: 14.5px; min-height: 22px; padding: 10px 12px 0; color: var(--teal); }
+    .say.warn { color: var(--gold); }
+    .again { display: block; margin: 8px auto 0; padding: 8px 20px; font-size: 14px;
+        background: var(--panel2); color: #fff; border: 1px solid #3a3a3a; border-radius: 20px; touch-action: manipulation; }
+    footer { padding: 18px 16px 50px; color: #777; font-size: 12.5px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+    <h1>יונתן הקטן — שלוש אפשרויות</h1>
+    <p>
+        בשיר הזה <b>כל התווים באורך כמעט זהה</b> — בין 2 ל-3.2 שניות, בלי קצרים בכלל.
+        לכן המנגנון שעובד בשאר השירים לא מתיישב עליו כמו שהוא.
+        שש הדמויות הראשונות של השיר בכל אפשרות: <b>סול, מי, מי, פה, רה, רה</b>.
+    </p>
+</header>
+
+<div class="card" id="a">
+    <h2>א · רק החריגים מוחזקים</h2>
+    <p class="how">
+        סף גבוה. כמעט כל התווים נגיעה אחת, ורק שני התווים שבאמת ארוכים יותר
+        בכל השיר דורשים החזקה. כאן הראשון והאחרון מייצגים אותם.
+    </p>
+    <div class="stage"><div class="row" data-row></div><div class="say" data-say></div>
+        <button class="again" data-again>מהתחלה</button></div>
+    <p class="note">
+        <b>היתרון:</b> יש ניגוד אמיתי — הילד מרגיש שמשהו כאן ארוך יותר.<br>
+        <b>המחיר:</b> בכל השיר יש רק שתי החזקות. המנגנון כמעט לא בא לידי ביטוי.
+    </p>
+</div>
+
+<div class="card" id="b">
+    <h2>ב · כל תו מוחזק</h2>
+    <p class="how">
+        כל תו דורש החזקה של שנייה וארבע עשיריות — קצר מהמרווח האמיתי,
+        כדי שלא יהיה מייגע. ככה זה ירגיש לאורך כל 49 התווים.
+    </p>
+    <div class="stage"><div class="row" data-row></div><div class="say" data-say></div>
+        <button class="again" data-again>מהתחלה</button></div>
+    <p class="note">
+        <b>היתרון:</b> מלמד בעקביות שתו נמשך בזמן, ומתאים לשיר איטי למתחילים.<br>
+        <b>המחיר:</b> 49 החזקות ברצף. תנסי לנגן את השש כאן ותרגישי איך זה מצטבר.
+    </p>
+</div>
+
+<div class="card" id="c">
+    <h2>ג · בלי משכים — רק השדרוג החזותי</h2>
+    <p class="how">
+        נגיעה אחת לכל תו, כמו היום. מה שמשתנה: הדמויות גדולות פי שלושה,
+        ואי אפשר להיתקע עם מסך מוגדל.
+    </p>
+    <div class="stage"><div class="row" data-row></div><div class="say" data-say></div>
+        <button class="again" data-again>מהתחלה</button></div>
+    <p class="note">
+        <b>היתרון:</b> משפר בוודאות, בלי להמציא ניגוד קצב שלא קיים בשיר.<br>
+        <b>המחיר:</b> אין כאן שום לימוד של משך.
+    </p>
+</div>
+
+<footer>
+    עמוד תצוגה בלבד, לא חלק מהשיעור. אמחק אותו ברגע שתחליטי.
+    הצלילים מסונתזים ולא דגימות הפסנתר, כדי שהעמוד ייטען מהר.
+</footer>
+</div>
+
+<script>
+var ac = null;
+function ctx() { if (!ac) ac = new (window.AudioContext || window.webkitAudioContext)(); return ac; }
+function voice(f) {
+    var a = ctx(), t0 = a.currentTime + 0.01, m = a.createGain();
+    m.gain.setValueAtTime(0, t0); m.gain.linearRampToValueAtTime(0.26, t0 + 0.04); m.connect(a.destination);
+    var os = [];
+    [[1,1],[2,.4],[3,.16],[4,.09]].forEach(function (p) {
+        var o = a.createOscillator(), g = a.createGain();
+        o.type = 'sine'; o.frequency.value = f * p[0]; g.gain.value = p[1];
+        o.connect(g).connect(m); o.start(t0); os.push(o);
+    });
+    return { stop: function () { var n = a.currentTime;
+        m.gain.cancelScheduledValues(n); m.gain.setValueAtTime(m.gain.value, n);
+        m.gain.linearRampToValueAtTime(0.0001, n + .08);
+        os.forEach(function (o) { try { o.stop(n + .14); } catch (e) {} }); } };
+}
+function ping(f, d) {
+    var a = ctx(), t0 = a.currentTime + .01, o = a.createOscillator(), g = a.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.16, t0 + .01);
+    g.gain.exponentialRampToValueAtTime(.0001, t0 + d);
+    o.connect(g).connect(a.destination); o.start(t0); o.stop(t0 + d + .05);
+}
+
+var TOP = "M-100,0 q25,-6 50,0 t50,0 t50,0 t50,0 t50,0 t50,0";
+var FULL = TOP + " V115 H-100 Z";
+function waterSvg() {
+    return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">' +
+        '<path class="wv" fill="#0F8C82" fill-opacity="0.72" d="' + FULL + '" transform="translate(0,100)"></path>' +
+        '<path class="wv" fill="none" stroke="#BFF6EE" stroke-width="6" stroke-opacity="0.95" d="' + TOP + '" transform="translate(0,100)"></path></svg>';
+}
+function setWater(el, p) {
+    var t = 'translate(' + (Math.sin(Date.now() / 240) * 6) + ',' + ((1 - p) * 100) + ')';
+    el.querySelectorAll('.wv').forEach(function (w) { w.setAttribute('transform', t); });
+}
+
+// ששת התווים הראשונים של השיר, עם הדמויות האמיתיות
+var PHRASE = [
+    { img: 'סול.png', f: 392.00 },
+    { img: 'מי.png',  f: 329.63 },
+    { img: 'מי.png',  f: 329.63 },
+    { img: 'פה.png',  f: 349.23 },
+    { img: 'רה.png',  f: 293.66 },
+    { img: 'רה.png',  f: 293.66 }
+];
+
+function build(card, holds) {
+    var row = card.querySelector('[data-row]');
+    row.innerHTML = '';
+    var els = PHRASE.map(function (n, i) {
+        var big = holds[i];
+        var d = document.createElement('div');
+        d.className = 'sn';
+        var size = big ? 68 : 52;
+        d.style.width = size + 'px'; d.style.height = size + 'px';
+        d.innerHTML = '<div class="ring"></div><div class="sn-av"><img src="' + n.img + '" alt="" draggable="false">' +
+                      '<span class="water">' + waterSvg() + '</span></div>';
+        row.appendChild(d);
+        return d;
+    });
+    return { els: els, say: card.querySelector('[data-say]') };
+}
+
+function game(cardId, holds, holdMs) {
+    var card = document.getElementById(cardId);
+    var ui = build(card, holds), idx = 0, hold = null;
+    function mark() {
+        ui.els.forEach(function (e, i) {
+            e.classList.toggle('done', i < idx);
+            e.classList.toggle('next', i === idx);
+            if (i < idx) { setWater(e.querySelector('.water'), 1); e.style.setProperty('--p', 1); }
+            else { setWater(e.querySelector('.water'), 0); e.style.setProperty('--p', 0); }
+        });
+    }
+    function reset() {
+        if (hold) { cancelAnimationFrame(hold.raf); hold.v.stop(); hold = null; }
+        idx = 0; ui.els.forEach(function (e) { e.classList.remove('holding'); });
+        mark();
+        ui.say.textContent = holds.some(Boolean) ? 'געי בדמות המסומנת' : 'געי בדמויות לפי הסדר';
+        ui.say.className = 'say';
+    }
+    card.querySelector('[data-again]').addEventListener('click', reset);
+
+    ui.els.forEach(function (el, i) {
+        function down(e) {
+            if (e && e.cancelable) e.preventDefault();
+            if (i !== idx || hold) return;
+            var n = PHRASE[i];
+            if (!holds[i]) { ping(n.f, .5); idx++; mark();
+                ui.say.textContent = idx >= PHRASE.length ? 'סיימת' : ''; ui.say.className = 'say'; return; }
+            el.classList.add('holding');
+            hold = { t0: Date.now(), need: holdMs, v: voice(n.f), full: false, el: el };
+            (function tick() {
+                if (!hold) return;
+                var p = Math.min(1, (Date.now() - hold.t0) / hold.need);
+                setWater(hold.el.querySelector('.water'), p);
+                hold.el.style.setProperty('--p', p.toFixed(3));
+                if (p >= 1 && !hold.full) { hold.full = true; ping(1318, .4); }
+                hold.raf = requestAnimationFrame(tick);
+            }());
+            ui.say.textContent = 'להחזיק…'; ui.say.className = 'say';
+        }
+        function up(e) {
+            if (e && e.cancelable) e.preventDefault();
+            if (!hold || hold.el !== el) return;
+            var h = hold; hold = null;
+            cancelAnimationFrame(h.raf); h.v.stop(); el.classList.remove('holding');
+            var p = (Date.now() - h.t0) / h.need;
+            if (p >= .9) { idx++; mark();
+                ui.say.textContent = idx >= PHRASE.length ? 'סיימת' : ''; ui.say.className = 'say'; }
+            else { setWater(el.querySelector('.water'), 0); el.style.setProperty('--p', 0);
+                ui.say.textContent = 'מוקדם מדי — אפשר שוב'; ui.say.className = 'say warn'; }
+        }
+        el.addEventListener('touchstart', down, { passive: false });
+        el.addEventListener('touchend', up, { passive: false });
+        el.addEventListener('touchcancel', up, { passive: false });
+        el.addEventListener('pointerdown', function (e) { if (e.pointerType === 'touch') return; down(e); });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (t) {
+            el.addEventListener(t, function (e) { if (e.pointerType === 'touch') return; up(e); });
+        });
+    });
+    reset();
+}
+
+// א: רק הראשון והאחרון מוחזקים, כמו שני החריגים בשיר
+game('a', [true, false, false, false, false, true], 1400);
+// ב: כל תו מוחזק
+game('b', [true, true, true, true, true, true], 1400);
+// ג: אף תו לא מוחזק
+game('c', [false, false, false, false, false, false], 1400);
+</script>
+</body>
+</html>
