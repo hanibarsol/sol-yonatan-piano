@@ -800,13 +800,12 @@
         noteLane.classList.toggle('hidden', mode !== 'practice');
         modeWatchBtn.classList.toggle('active', mode === 'watch');
         modePracticeBtn.classList.toggle('active', mode === 'practice');
-        // Practice stays dimmed for the WHOLE of watch mode, every time, for
-        // every child — not only before the video first reaches the practice
-        // section. Entering practice is the video's job (AUTO_PRACTICE_START),
-        // never a tap. A child who is tired of waiting has the speed stepper.
-        // Same rule as sol-nice2meet-piano; Hani's decision, 2026-08-23.
-        // Do not make this conditional.
-        modePracticeBtn.classList.toggle('locked', mode === 'watch');
+        // Entering practice is the video's job, never a tap — but only
+        // because the video is what teaches the child how to press. Once it
+        // has reached the play-along stretch that lesson has been given, so
+        // inside the stretch the button is live and a child who slipped back
+        // to צפייה can return. Outside it, dimmed. See refreshPracticeLock.
+        refreshPracticeLock();
         audioToggleWrap.classList.toggle('hidden', mode !== 'practice');
         // The water-fill result on each key is practice-mode feedback — left
         // showing in watch mode it just reads as a stray blue stain on the
@@ -831,12 +830,45 @@
     const lockHint = document.getElementById('mode-lock-hint');
     let lockHintTimeout = null;
 
+    // Where the video stands relative to its play-along stretch. AUTO_PRACTICE_*
+    // are declared further down; these only ever run from event handlers and
+    // the polling loop, long after that line has executed.
+    function practiceStretchState() {
+        const t = (player && player.getCurrentTime) ? player.getCurrentTime() : 0;
+        if (t < AUTO_PRACTICE_START) return 'before';
+        if (t < AUTO_PRACTICE_END) return 'inside';
+        return 'after';
+    }
+
+    // Dimmed exactly when tapping it would not be allowed. The stretch here
+    // runs 0:13-2:33 — nearly the whole video — so a child who taps צפייה
+    // partway through must be able to come back; being shut out until the
+    // video ends would cost them the lesson, not a moment of it. Called from
+    // setMode and from the polling loop, because the 2:33 edge can pass while
+    // the page is already in watch mode, where setMode never fires.
+    function refreshPracticeLock() {
+        modePracticeBtn.classList.toggle(
+            'locked', mode === 'watch' && practiceStretchState() !== 'inside');
+    }
+
     modePracticeBtn.addEventListener('click', () => {
-        // Dimmed is not dead. In watch mode this tap never enters practice —
-        // it answers with a sentence, because a button that does nothing at
-        // all reads to a four-year-old as a fault. Do NOT "fix" this by
-        // adding disabled or pointer-events: none.
-        if (mode === 'watch') {
+        // Dimmed is not dead. Where the tap is not allowed it answers with a
+        // sentence, because a button that does nothing at all reads to a
+        // four-year-old as a fault. Do NOT "fix" this by adding disabled or
+        // pointer-events: none.
+        //
+        // The sentence has to match the reason. Before the stretch, the
+        // explanation is still coming. After it, what ended is the playing,
+        // not the video — 2:33 leaves 27s of Hani's closing still to run, so
+        // "הסרטון נגמר" would be untrue for most of a minute, and "קודם
+        // צופים בהסבר" would be a lie either way: the child watched the
+        // explanation a long time ago. Keep any replacement under ~250px
+        // wide; the pill is nowrap and the platform supports 320px screens.
+        const state = practiceStretchState();
+        if (mode === 'watch' && state !== 'inside') {
+            lockHint.textContent = state === 'before'
+                ? 'רגע, קודם צופים בהסבר 👀'
+                : 'סיימנו לנגן! אפשר להתחיל שוב 🔁';
             lockHint.classList.remove('hidden');
             clearTimeout(lockHintTimeout);
             lockHintTimeout = setTimeout(() => lockHint.classList.add('hidden'), 2600);
@@ -845,8 +877,8 @@
         setMode('practice');
     });
 
-    // The lesson opens in watch mode, so the button starts dimmed. setMode()
-    // keeps it in step from here on.
+    // The lesson opens in watch mode at t=0, before the stretch, so the button
+    // starts dimmed. refreshPracticeLock() keeps it in step from here on.
     modePracticeBtn.classList.add('locked');
     audioToggleBtn.addEventListener('click', () => {
         audioOn = !audioOn;
@@ -1994,6 +2026,12 @@
             autoExitFired = true;
             setMode('watch');
         }
+
+        // The 0:13 and 2:33 edges change whether תרגול may be tapped, and
+        // either can pass while the page is already in watch mode — where
+        // setMode never runs and would never re-dress the button. A rewind
+        // moves the same boundaries backwards. Cheap enough to just re-check.
+        refreshPracticeLock();
 
         // Same reason as the auto watch/practice guard above — this loop
         // keeps polling the (possibly paused) player clock even under
