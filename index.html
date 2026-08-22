@@ -62,6 +62,8 @@
         #video-wrap.mini iframe { pointer-events: none; }
 
         #mode-bar {
+            /* Containing block for the lock hint bubble below. */
+            position: relative;
             flex: 0 0 auto;
             display: flex;
             flex-wrap: wrap;
@@ -84,6 +86,33 @@
             cursor: pointer;
         }
         .mode-btn.active { background: var(--teal); color: #0a1210; border-color: var(--teal); font-weight: bold; }
+
+        /* The practice button is dimmed for the whole of watch mode, always —
+           this is not a first-visit lock. The video is what teaches the child
+           how to press, and the video is what decides when practice begins.
+           Kept clickable on purpose so the tap can answer with the hint below
+           rather than silently doing nothing, which reads as broken.
+           Matches sol-nice2meet-piano; Hani's decision, 2026-08-23. */
+        .mode-btn.locked { opacity: 0.35; cursor: default; }
+        #mode-lock-hint {
+            position: absolute;
+            /* above the bar, over the video: below it the pill covered the
+               speed controls */
+            bottom: calc(100% - 2px); left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.85);
+            border: 1px solid rgba(111,214,201,0.4);
+            color: #fff;
+            padding: 7px 16px;
+            border-radius: 20px;
+            font-size: 15px;
+            white-space: nowrap;
+            z-index: 70;
+            opacity: 1;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+        #mode-lock-hint.hidden { opacity: 0; }
 
         /* Practice-only: toggles whether the video's own audio (the song +
            Hani singing along) is heard while the child plays, independent
@@ -654,6 +683,7 @@
     <div id="mode-bar">
         <button id="mode-watch" class="mode-btn active">👀 צפייה</button>
         <button id="mode-practice" class="mode-btn">🎹 תרגול</button>
+        <div id="mode-lock-hint" class="hidden">רגע, קודם צופים בהסבר 👀</div>
         <div id="audio-toggle-wrap" class="hidden">
             <button id="audio-toggle" title="ליווי קול">🔇</button>
             <span id="audio-toggle-label">חני, תשירי ותנגני איתי</span>
@@ -770,6 +800,13 @@
         noteLane.classList.toggle('hidden', mode !== 'practice');
         modeWatchBtn.classList.toggle('active', mode === 'watch');
         modePracticeBtn.classList.toggle('active', mode === 'practice');
+        // Practice stays dimmed for the WHOLE of watch mode, every time, for
+        // every child — not only before the video first reaches the practice
+        // section. Entering practice is the video's job (AUTO_PRACTICE_START),
+        // never a tap. A child who is tired of waiting has the speed stepper.
+        // Same rule as sol-nice2meet-piano; Hani's decision, 2026-08-23.
+        // Do not make this conditional.
+        modePracticeBtn.classList.toggle('locked', mode === 'watch');
         audioToggleWrap.classList.toggle('hidden', mode !== 'practice');
         // The water-fill result on each key is practice-mode feedback — left
         // showing in watch mode it just reads as a stray blue stain on the
@@ -790,7 +827,27 @@
         sizeKeys();
     }
     modeWatchBtn.addEventListener('click', () => setMode('watch'));
-    modePracticeBtn.addEventListener('click', () => setMode('practice'));
+
+    const lockHint = document.getElementById('mode-lock-hint');
+    let lockHintTimeout = null;
+
+    modePracticeBtn.addEventListener('click', () => {
+        // Dimmed is not dead. In watch mode this tap never enters practice —
+        // it answers with a sentence, because a button that does nothing at
+        // all reads to a four-year-old as a fault. Do NOT "fix" this by
+        // adding disabled or pointer-events: none.
+        if (mode === 'watch') {
+            lockHint.classList.remove('hidden');
+            clearTimeout(lockHintTimeout);
+            lockHintTimeout = setTimeout(() => lockHint.classList.add('hidden'), 2600);
+            return;
+        }
+        setMode('practice');
+    });
+
+    // The lesson opens in watch mode, so the button starts dimmed. setMode()
+    // keeps it in step from here on.
+    modePracticeBtn.classList.add('locked');
     audioToggleBtn.addEventListener('click', () => {
         audioOn = !audioOn;
         audioToggleBtn.classList.toggle('active', audioOn);
@@ -1118,6 +1175,9 @@
     const AUTO_PRACTICE_END = 153;
     let autoEnterFired = false;
     let autoExitFired = false;
+    // Last clock reading, so a jump backwards (replay, rewind, a drag on
+    // YouTube's own progress bar) can be spotted from the clock itself.
+    let lastVideoTime = 0;
 
     // Calibration tool is dev-only: hidden from students, shown only when
     // building/checking a song's timing map via ?admin=1 in the URL.
@@ -1895,6 +1955,36 @@
     setInterval(() => {
         if (!player || !player.getCurrentTime) return;
         const t = player.getCurrentTime();
+
+        // Going back to the start through YouTube's own play button, or by
+        // dragging its progress bar, never touched the replay button on this
+        // page — which was the only thing that re-armed the auto-switch.
+        // Practice mode then never came back, and the note counter stayed
+        // parked at the end of the song, so even tapping תרגול by hand gave a
+        // practice mode with no falling notes. Now that תרגול is dimmed
+        // outside the play-along stretch, that left no way in at all.
+        // Watch the clock rather than the button: whoever moved it back,
+        // rebuild the same state the replay button rebuilds.
+        // Ported from sol-haverim-piano, where this was already solved.
+        if (!soloMode && t < lastVideoTime - 1) {
+            songIdx = 0;
+            while (songIdx < songNotes.length && t > songNotes[songIdx].time + NOTE_TAIL) songIdx++;
+            songHit = false;
+            resetKeyFills();
+            Object.values(keyByNote).forEach(el => el.classList.remove('due'));
+            // Landing before the play-along stretch ends means it is still
+            // ahead of us, so both auto-switch edges have to fire again.
+            if (t < AUTO_PRACTICE_END) {
+                autoEnterFired = false;
+                autoExitFired = false;
+            }
+            // The pause button was left showing the end-of-song 🔁.
+            if (player.getPlayerState && player.getPlayerState() === YT.PlayerState.PLAYING) {
+                isPaused = false;
+                playPauseBtn.textContent = '⏸';
+            }
+        }
+        lastVideoTime = t;
 
         if (!soloMode && !autoEnterFired && mode === 'watch' && t >= AUTO_PRACTICE_START && t < AUTO_PRACTICE_END) {
             autoEnterFired = true;
