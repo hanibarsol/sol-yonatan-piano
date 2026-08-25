@@ -2062,5 +2062,34 @@
         setMode('practice');
     }
 </script>
+
+<script>
+/* sol-home-back: the home button returns the child to the page they came from.
+
+   The Smoove address written into the button carries a portal id, and Smoove issues a different
+   one per account — the id here is Hani's. It therefore worked for her and sent every real
+   customer to a portal they are not signed in to, which answers with a login screen in the
+   middle of a lesson. Her friend found it on 2026-08-26: signed in as Hani everything worked,
+   signed in as herself the button broke. Proved fixed by the same friend on her own account.
+
+   Going back carries no id, so each child lands in their own portal on the page they left.
+   If there is nothing behind us — the lesson was opened in a fresh tab — the original href
+   still runs, so the button is never dead. */
+(function () {
+  var home = document.querySelector('a[href*="portal.smoove.io"][href*="Category"]');
+  if (!home) return;
+  home.addEventListener("click", function (e) {
+    if (window.history.length <= 1) return;
+    e.preventDefault();
+    var wasAt = location.href;
+    window.history.back();
+    setTimeout(function () {
+      if (location.href === wasAt) {
+        try { window.top.location.href = home.href; } catch (err) { location.href = home.href; }
+      }
+    }, 500);
+  });
+})();
+</script>
 </body>
 </html>
