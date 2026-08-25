@@ -2064,30 +2064,49 @@
 </script>
 
 <script>
-/* sol-home-back: the home button returns the child to the page they came from.
+/* sol-home-back: the home button leaves the lessons and returns to the portal.
 
    The Smoove address written into the button carries a portal id, and Smoove issues a different
-   one per account — the id here is Hani's. It therefore worked for her and sent every real
-   customer to a portal they are not signed in to, which answers with a login screen in the
-   middle of a lesson. Her friend found it on 2026-08-26: signed in as Hani everything worked,
-   signed in as herself the button broke. Proved fixed by the same friend on her own account.
+   one per login - the id here belongs to one account. It worked for Hani and answered every
+   other customer with a login screen in the middle of a lesson. Her friend proved it on
+   2026-08-26: signed in as Hani everything worked, signed in as herself the button broke.
 
-   Going back carries no id, so each child lands in their own portal on the page they left.
-   If there is nothing behind us — the lesson was opened in a fresh tab — the original href
-   still runs, so the button is never dead. */
+   Going back ONE page was the first fix and it was not enough. A child paging through the
+   course with the arrows stacks up history - portal, lesson, lesson, lesson - so one step back
+   only reached the previous lesson, and a second press eventually landed on the login page that
+   was still sitting in the history. Hani found that.
+
+   So the lesson counts its own depth: each hop that arrives from another page of this same site
+   adds one, and arriving from Smoove resets it. The button then jumps back over the whole run
+   in a single step and lands on the portal page the child left, whichever portal that is.
+
+   The original href stays as the last resort for a lesson opened in a fresh tab, where there is
+   no history at all. It is stale for everyone but Hani - better than a dead button, worse than
+   a real one. The real fix is a permanent Smoove address; Hani is asking them for one. */
 (function () {
+  var KEY = "sol-nav-depth";
+  var depth = 0;
+  try {
+    var ref = document.referrer || "";
+    depth = ref.indexOf(location.origin + "/") === 0
+      ? (parseInt(sessionStorage.getItem(KEY), 10) || 0) + 1
+      : 0;
+    sessionStorage.setItem(KEY, String(depth));
+  } catch (e) { depth = 0; }
+
   var home = document.querySelector('a[href*="portal.smoove.io"][href*="Category"]');
   if (!home) return;
   home.addEventListener("click", function (e) {
     if (window.history.length <= 1) return;
     e.preventDefault();
     var wasAt = location.href;
-    window.history.back();
+    try { sessionStorage.setItem(KEY, "0"); } catch (err) {}
+    window.history.go(-(depth + 1));
     setTimeout(function () {
       if (location.href === wasAt) {
         try { window.top.location.href = home.href; } catch (err) { location.href = home.href; }
       }
-    }, 500);
+    }, 600);
   });
 })();
 </script>
