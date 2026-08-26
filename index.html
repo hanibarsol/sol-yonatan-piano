@@ -713,7 +713,7 @@
 
 <div id="start-screen"></div>
 
-<a class="sol-home-btn" href="https://portal.smoove.io/gsbmtbnbbf1yd87kbofd1/Category?category=qqb" target="_top" aria-label="חזרה למסך הבית">
+<a class="sol-home-btn" href="https://portal.smoove.io/io1fb7dbnnbgyy/Category?category=qqb" target="_top" aria-label="חזרה למסך הבית">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M3 11l9-8 9 8" />
         <path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10" />
@@ -2063,66 +2063,5 @@
     }
 </script>
 
-<script>
-/* sol-home-back: the home button leaves the lessons and returns to the portal.
-
-   The Smoove address written into the button carries a portal id, and Smoove issues a different
-   one per login - the id here belongs to one account. It worked for Hani and answered every other
-   customer with a login screen in the middle of a lesson. Her friend proved it on 2026-08-26:
-   signed in as Hani everything worked, signed in as herself the button broke.
-
-   How a child actually gets here: the worlds screen, then the lesson's own page in Smoove, then a
-   linked image on that page - and Smoove opens that image in a NEW TAB. Measured the same day:
-   the back arrow is greyed out, history.length is 1. So walking back through history, which was
-   the first fix, could never work here.
-
-   Two paths, and the tab decides which:
-
-   Fresh tab (the normal case): close it. The Smoove tab is still open behind, signed in, on the
-   page the child left. Measured: a tab opened by a target=_blank link closes itself in Chrome even
-   with rel=noopener.
-
-   Real history (a lesson opened in the same tab): jump back over the whole run at once. Each
-   lesson counts its depth - a hop arriving from another page of this site adds one, arriving from
-   Smoove resets to zero - because a child paging through with the arrows stacks up entries, and
-   one step back only reached the previous lesson. Hani found that.
-
-   The original href is the last resort if both fail. It is stale for everyone but Hani - better
-   than a dead button, worse than a real one. The real fix is a permanent Smoove address that
-   lands on the worlds screen; Hani is asking them for one. */
-(function () {
-  var KEY = "sol-nav-depth";
-  var depth = 0;
-  try {
-    var ref = document.referrer || "";
-    depth = ref.indexOf(location.origin + "/") === 0
-      ? (parseInt(sessionStorage.getItem(KEY), 10) || 0) + 1
-      : 0;
-    sessionStorage.setItem(KEY, String(depth));
-  } catch (e) { depth = 0; }
-
-  var home = document.querySelector('a[href*="portal.smoove.io"][href*="Category"]');
-  if (!home) return;
-
-  home.addEventListener("click", function (e) {
-    e.preventDefault();
-    var wasAt = location.href;
-    var fallback = function () {
-      if (location.href !== wasAt) return;
-      try { window.top.location.href = home.href; } catch (err) { location.href = home.href; }
-    };
-
-    if (window.history.length <= 1) {
-      try { window.close(); } catch (err) {}
-      setTimeout(fallback, 500);
-      return;
-    }
-
-    try { sessionStorage.setItem(KEY, "0"); } catch (err) {}
-    window.history.go(-(depth + 1));
-    setTimeout(fallback, 600);
-  });
-})();
-</script>
 </body>
 </html>
