@@ -2064,42 +2064,48 @@
 </script>
 
 <script>
-/* sol-home-back: the home button leaves the lessons and returns to the portal.
+/* sol-home-back: the home button leaves the lesson and returns the child into Smoove.
 
-   The Smoove address written into the button carries a portal id, and Smoove issues a different
-   one per login - the id here belongs to one account. It worked for Hani and answered every other
-   customer with a login screen in the middle of a lesson. Her friend proved it on 2026-08-26:
-   signed in as Hani everything worked, signed in as herself the button broke.
+   The Smoove address written into this button carries a portal id, and Smoove issues a different
+   one per account - the id here belongs to Hani. It worked for her and answered every other
+   customer with a login screen in the middle of a lesson. Her tester proved it on 2026-08-26:
+   signed in as Hani everything worked, signed in as herself the button broke. So the address is
+   now only the last resort, and the button navigates by other means.
 
-   How a child actually gets here: the worlds screen, then the lesson's own page in Smoove, then a
-   linked image on that page - and Smoove opens that image in a NEW TAB. Measured the same day:
-   the back arrow is greyed out, history.length is 1. So walking back through history, which was
-   the first fix, could never work here.
+   How a child gets here: Smoove's menu, then the lesson's own page, then a linked image on that
+   page - and Smoove opens that image in a NEW TAB. Measured: the back arrow is greyed out and
+   history.length is 1. The page behind is exactly where the child wants to return to, because it
+   carries Smoove's own menu.
 
-   Two paths, and the tab decides which:
+   So a tab that was BORN on a lesson closes itself, and the child is back on that page, signed in.
+   The flag matters: after one press of the forward arrow the tab holds two entries, and an earlier
+   version read that as "there is history to walk back through" and tried to step back past the
+   first lesson - where nothing exists. The tab did not move, the stale address ran, and the child
+   met a login screen. Hani's tester found exactly that: fine until the forward arrow, thrown out
+   after it.
 
-   Fresh tab (the normal case): close it. The Smoove tab is still open behind, signed in, on the
-   page the child left. Measured: a tab opened by a target=_blank link closes itself in Chrome even
-   with rel=noopener.
-
-   Real history (a lesson opened in the same tab): jump back over the whole run at once. Each
-   lesson counts its depth - a hop arriving from another page of this site adds one, arriving from
-   Smoove resets to zero - because a child paging through with the arrows stacks up entries, and
-   one step back only reached the previous lesson. Hani found that.
-
-   The original href is the last resort if both fail. It is stale for everyone but Hani - better
-   than a dead button, worse than a real one. The real fix is a permanent Smoove address that
-   lands on the worlds screen; Hani is asking them for one. */
+   A tab that arrived with real history behind it - a lesson opened in the same tab - walks back
+   instead, over the whole run at once, using the depth each lesson counts for itself. */
 (function () {
-  var KEY = "sol-nav-depth";
-  var depth = 0;
+  var DEPTH = "sol-nav-depth";
+  var BORN  = "sol-nav-born";
+  var depth = 0, born = false;
+
   try {
-    var ref = document.referrer || "";
-    depth = ref.indexOf(location.origin + "/") === 0
-      ? (parseInt(sessionStorage.getItem(KEY), 10) || 0) + 1
-      : 0;
-    sessionStorage.setItem(KEY, String(depth));
-  } catch (e) { depth = 0; }
+    var sameSite = (document.referrer || "").indexOf(location.origin + "/") === 0;
+    if (sameSite) {
+      depth = (parseInt(sessionStorage.getItem(DEPTH), 10) || 0) + 1;
+      born  = sessionStorage.getItem(BORN) === "1";
+    } else {
+      depth = 0;
+      born  = window.history.length <= 1;
+      sessionStorage.setItem(BORN, born ? "1" : "0");
+    }
+    sessionStorage.setItem(DEPTH, String(depth));
+  } catch (e) {
+    depth = 0;
+    born  = window.history.length <= 1;
+  }
 
   var home = document.querySelector('a[href*="portal.smoove.io"][href*="Category"]');
   if (!home) return;
@@ -2112,13 +2118,13 @@
       try { window.top.location.href = home.href; } catch (err) { location.href = home.href; }
     };
 
-    if (window.history.length <= 1) {
+    if (born) {
       try { window.close(); } catch (err) {}
       setTimeout(fallback, 500);
       return;
     }
 
-    try { sessionStorage.setItem(KEY, "0"); } catch (err) {}
+    try { sessionStorage.setItem(DEPTH, "0"); } catch (err) {}
     window.history.go(-(depth + 1));
     setTimeout(fallback, 600);
   });
