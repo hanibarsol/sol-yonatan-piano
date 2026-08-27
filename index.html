@@ -2,7 +2,7 @@
 <html lang="he">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
     <title>המשפחה של סול - שיעור + פסנתר</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -2131,5 +2131,24 @@
 </script>
 
 
+
+<style>
+/* sol-safe-top: keep the corner buttons below whatever the browser draws over the page.
+
+   Hani's tester met a lesson with its top cut off - home and arrows out of sight - while the
+   page itself reported perfect geometry: scale 1, no viewport offset, the button eight pixels
+   down, the visual viewport the full height of the window. Nothing on the page was wrong. Her
+   browser was simply drawing its own bar over the top, and a page cannot measure that.
+
+   env(safe-area-inset-top) is the browser telling us how much it covers, and it only answers
+   once the viewport asks with viewport-fit=cover. Where nothing covers the page it answers
+   zero and the buttons do not move at all. */
+.sol-home-btn { top: calc(env(safe-area-inset-top, 0px) + 12px) !important; }
+.sol-nav { top: calc(env(safe-area-inset-top, 0px) + 72px) !important; }
+@media (max-width: 640px) {
+  .sol-home-btn { top: calc(env(safe-area-inset-top, 0px) + 8px) !important; }
+  .sol-nav { top: calc(env(safe-area-inset-top, 0px) + 58px) !important; }
+}
+</style>
 </body>
 </html>
