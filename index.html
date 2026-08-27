@@ -2130,35 +2130,6 @@
 })();
 </script>
 
-<!-- sol-vp: TEMPORARY. The top of this lesson comes out cut off on one tester's phone and a
-     refresh always fixes it. This reads what her browser actually thinks the window is. It sits
-     at the BOTTOM so it cannot be cut off itself. Delete once the numbers are known. -->
-<div id="sol-vp" dir="ltr" style="position:fixed;bottom:0;left:0;right:0;z-index:99999;
-  background:#111;color:#0f0;font:bold 13px/1.45 monospace;padding:8px 10px;text-align:left;
-  word-break:break-all;border-top:3px solid #0f0"></div>
-<script>
-(function () {
-  var d = document.getElementById("sol-vp");
-  function show() {
-    var v = window.visualViewport;
-    var home = document.querySelector(".sol-home-btn, [class*=home-btn]");
-    var r = home ? home.getBoundingClientRect() : null;
-    d.textContent =
-      "SCALE " + (v ? Math.round(v.scale * 100) / 100 : "?") +
-      " | VVtop " + (v ? Math.round(v.offsetTop) : "?") +
-      " | VVh " + (v ? Math.round(v.height) : "?") +
-      " | WINh " + window.innerHeight +
-      " | SCROLL " + Math.round(window.pageYOffset) +
-      " | HOMEtop " + (r ? Math.round(r.top) : "none");
-  }
-  show();
-  window.addEventListener("load", show);
-  window.setTimeout(show, 1500);
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", show);
-    window.visualViewport.addEventListener("scroll", show);
-  }
-})();
-</script>
+
 </body>
 </html>
