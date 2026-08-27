@@ -2064,25 +2064,26 @@
 </script>
 
 <script>
-/* sol-home-back: the home button, with the guessing taken out.
+/* sol-home-back: the home button. It asks nothing and guesses nothing.
 
-   Smoove opens a lesson in a NEW TAB - measured 27.8.2026: the back arrow is greyed out and
-   history.length is 1 - and the Smoove tab stays open behind it on the page the child left. So the
-   tab closes itself and the child is back exactly where they were.
+   Try to close the tab. If the tab is still here a moment later, go to the portal.
 
-   An earlier version tried to walk back through history when there was no tab to close, counting
-   how many lessons deep the child had gone. That count was derived from the referrer, and on
-   28.8.2026 Hani found where it leads: Smoove routes every click through click.smoove.io, which
-   strips the referrer entirely, so the count was wrong and the button jumped several entries back
-   into whatever the child had been browsing before. On Hani's own phone it landed on a games site
-   her children had used. No history walking here, ever, for that reason.
+   Everything more clever than that has failed here, and each failure taught the same lesson: this
+   page cannot tell how the child arrived. Smoove routes every click through click.smoove.io, which
+   strips the referrer completely, and the tracker leaves an entry in the history as well - so
+   "where did you come from" and "is this a fresh tab" both answer wrongly. A version that counted
+   history entries sent Hani's own phone back into a games site her children had used; a version
+   that checked history.length sent her tester one lesson back and then to a login screen. Measured
+   on her devices, 28.8.2026.
 
-   When there is no tab to close, the button goes to one fixed address instead: the short courses
-   link Smoove gave Hani from the course settings. It is the only Smoove address measured to work
-   for somebody other than Hani - her tester opened it signed in, without a password. It lands on
-   the course list rather than the lesson's own page, which is one click further out than ideal,
-   but it is inside the portal, it is the same for every customer, and it can never be somewhere
-   else entirely. */
+   Closing works because Smoove opens the lesson in a new tab and that tab is ours to close - it
+   returns the child to the Smoove page they left, still signed in, however many lessons they moved
+   through with the arrows first.
+
+   The fallback is the short courses link from the course settings: the one Smoove address measured
+   to work for somebody who is not Hani - her tester opened it signed in, without a password. It
+   lands a step further out than the lesson's own page, and that is the price of never landing
+   somewhere else entirely. */
 (function () {
   var PORTAL = "https://portal.smoove.io/dfb7";
   var home = document.querySelector('a[href*="portal.smoove.io"][href*="Category"]')
@@ -2091,16 +2092,10 @@
 
   home.addEventListener("click", function (e) {
     e.preventDefault();
-
-    if (window.history.length <= 1) {
-      try { window.close(); } catch (err) {}
-      window.setTimeout(function () {
-        try { window.top.location.href = PORTAL; } catch (err) { location.href = PORTAL; }
-      }, 400);
-      return;
-    }
-
-    try { window.top.location.href = PORTAL; } catch (err) { location.href = PORTAL; }
+    try { window.close(); } catch (err) {}
+    window.setTimeout(function () {
+      try { window.top.location.href = PORTAL; } catch (err) { location.href = PORTAL; }
+    }, 350);
   });
 })();
 </script>
