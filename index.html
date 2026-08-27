@@ -2130,5 +2130,21 @@
   });
 })();
 </script>
+
+<!-- sol-diag: TEMPORARY. Shows where the browser thinks the child came from, so Hani can
+     photograph it. The access check in front of worlds.solsfamily.com blocked children
+     arriving from the portal, and the referrer is the one thing we cannot see from here.
+     Delete this whole block once the answer is known. -->
+<div id="sol-diag" dir="ltr" style="position:fixed;top:0;left:0;right:0;z-index:99999;
+  background:#111;color:#0f0;font:bold 15px/1.5 monospace;padding:10px 12px;text-align:left;
+  word-break:break-all;border-bottom:3px solid #0f0"></div>
+<script>
+(function () {
+  var d = document.getElementById("sol-diag");
+  var r = document.referrer;
+  d.textContent = "REFERRER: " + (r ? r : "(EMPTY)") + "   |   HERE: " + location.hostname;
+  document.body.style.paddingTop = "56px";
+})();
+</script>
 </body>
 </html>
