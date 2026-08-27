@@ -2107,5 +2107,23 @@
 
 
 
+
+<style>
+/* sol-above-video: keep the corner buttons above the video player.
+
+   On iOS an embedded player is composited by the system in a layer of its own, and it can end
+   up drawn over elements that sit above it in the stacking order. Hani's tester photographed it:
+   the lesson open, the video filling the top, and no home button or arrows anywhere - while the
+   page itself reported them present, unzoomed and eight pixels from the top. It happens only in
+   the three lessons that carry a video; no other lesson has ever shown it.
+
+   translateZ(0) puts the buttons on a compositing layer of their own, which is what makes iOS
+   respect the order. Nothing moves and nothing changes anywhere else. */
+.sol-home-btn, .sol-nav, .sol-nav-btn {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  z-index: 2147483000 !important;
+}
+</style>
 </body>
 </html>
