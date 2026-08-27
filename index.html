@@ -2,7 +2,7 @@
 <html lang="he">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
     <title>המשפחה של סול - שיעור + פסנתר</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -2102,53 +2102,10 @@
 
 
 
-<script>
-/* sol-reflow: draw the page again once it has arrived.
-
-   Opened in a new tab from Smoove, the top of the lesson came out cut off on Hani's tester's
-   phone - the home button and the arrows off the top of the screen - and a plain refresh always
-   put it right. So the page is fine; the phone simply measures the window wrong on the first
-   paint, which is a known way for iOS to behave when a tab is opened by a redirect.
-
-   Rewriting the viewport tag makes the browser measure again, which is what the refresh was
-   doing by hand. It runs once on load and again if the page is restored from the back-forward
-   cache, and it changes nothing on a phone that measured correctly the first time. */
-(function () {
-  var vp = document.querySelector('meta[name="viewport"]');
-  if (!vp) return;
-  var real = vp.getAttribute("content");
-  function remeasure() {
-    vp.setAttribute("content", real + ", height=" + window.innerHeight);
-    window.setTimeout(function () {
-      vp.setAttribute("content", real);
-      window.scrollTo(0, 0);
-    }, 60);
-  }
-  window.addEventListener("load", remeasure);
-  window.addEventListener("pageshow", function (e) { if (e.persisted) remeasure(); });
-  window.addEventListener("orientationchange", function () { window.setTimeout(remeasure, 120); });
-})();
-</script>
 
 
 
-<style>
-/* sol-safe-top: keep the corner buttons below whatever the browser draws over the page.
 
-   Hani's tester met a lesson with its top cut off - home and arrows out of sight - while the
-   page itself reported perfect geometry: scale 1, no viewport offset, the button eight pixels
-   down, the visual viewport the full height of the window. Nothing on the page was wrong. Her
-   browser was simply drawing its own bar over the top, and a page cannot measure that.
 
-   env(safe-area-inset-top) is the browser telling us how much it covers, and it only answers
-   once the viewport asks with viewport-fit=cover. Where nothing covers the page it answers
-   zero and the buttons do not move at all. */
-.sol-home-btn { top: calc(env(safe-area-inset-top, 0px) + 12px) !important; }
-.sol-nav { top: calc(env(safe-area-inset-top, 0px) + 72px) !important; }
-@media (max-width: 640px) {
-  .sol-home-btn { top: calc(env(safe-area-inset-top, 0px) + 8px) !important; }
-  .sol-nav { top: calc(env(safe-area-inset-top, 0px) + 58px) !important; }
-}
-</style>
 </body>
 </html>
