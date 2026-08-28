@@ -2108,5 +2108,70 @@
 
 
 
-</body>
+
+<style>
+/* sol-crios: Chrome on iPhone hides the top of the page, so nothing the child
+   needs is put there.
+
+   Chrome sometimes paints the page from the top of the window instead of below
+   its own address bar. Measured on a tester's phone: an 852 screen, a 669
+   opening, Chrome handing the page a correct 666 and then drawing it from three
+   pixels above the screen. The first hundred-odd pixels vanish behind the
+   address bar and the leftover shows as black along the bottom.
+
+   Nothing in the page can see it. Twelve values were compared between a phone
+   where Chrome places the page correctly and one where it does not, including
+   outerHeight, availHeight, visualViewport.offsetTop and the position of the
+   document root: every one identical. Four attempts to make Chrome measure
+   again - a compositing layer, a small-viewport height, a pixel of scroll, a
+   rewritten viewport tag - all failed. Safari on the same phone, same link,
+   same minute, is always perfect.
+
+   So the page starts below the strip Chrome eats. The strip is the same dark
+   colour as the page and carries nothing, at Hani's request: when Chrome
+   behaves it reads as nothing at all, just a page sitting slightly lower; when
+   Chrome misbehaves it is the strip that disappears instead of the content.
+
+   Its height cannot be trimmed - it is exactly what Chrome hides, and anything
+   shorter puts the top of the content back under the address bar. It is measured
+   per device and bounded, so no phone can push the page into mid-screen.
+
+   Chrome on iOS only. Safari, Android, iPad and desktop never run a line of it. */
+.sol-crios-band { display: none; }
+html.sol-crios .sol-crios-band {
+  display: block;
+  box-sizing: border-box;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: var(--sol-crios-drop, 110px);
+  z-index: 99;
+  background: #111111;
+  pointer-events: none;
+}
+html.sol-crios #app {
+  box-sizing: border-box;
+  padding-top: var(--sol-crios-drop, 110px);
+}
+html.sol-crios .sol-home-btn { top: calc(8px + var(--sol-crios-drop, 110px)); }
+html.sol-crios .sol-nav      { top: calc(58px + var(--sol-crios-drop, 110px)); }
+</style>
+<script>
+(function () {
+  if (!/CriOS/.test(navigator.userAgent)) return;
+  var band = document.createElement("div");
+  band.className = "sol-crios-band";
+  document.body.appendChild(band);
+  function place() {
+    var bars = window.screen.height - window.innerHeight;  /* both Chrome bars */
+    var top = bars - 80;                                   /* minus the bottom one */
+    if (top < 90) top = 90;
+    if (top > 140) top = 140;
+    document.documentElement.style.setProperty("--sol-crios-drop", top + "px");
+  }
+  document.documentElement.classList.add("sol-crios");
+  place();
+  window.addEventListener("resize", place);
+  window.addEventListener("orientationchange", function () { setTimeout(place, 300); });
+})();
+</script></body>
 </html>
