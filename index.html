@@ -1902,6 +1902,25 @@
     // fixed vh) so proportions stay realistic at any size, and the whole
     // cabinet is capped by available vertical space so it never crowds
     // the video out on a short window.
+    // Height left for the note lane (or staff) plus the keys, once the page's
+    // own top offset, the 76px video strip, both control rows and the
+    // cabinet's frame are taken off. Read from the live layout so a wrapped
+    // mode bar or Chrome-on-iPhone's top strip is counted, not guessed.
+    function roomBelowControls() {
+        const px = (el, prop) => parseFloat(getComputedStyle(el)[prop]) || 0;
+        const app = document.getElementById('app');
+        const lip = document.getElementById('cabinet-lip');
+        const above = px(app, 'paddingTop') + 76
+            + document.getElementById('mode-bar').offsetHeight
+            + document.getElementById('speed-bar').offsetHeight;
+        const frame = px(pianoContainer, 'paddingTop') + px(pianoContainer, 'paddingBottom')
+            + px(document.getElementById('cabinet'), 'paddingTop')
+            + lip.offsetHeight + px(lip, 'marginBottom')
+            + px(document.getElementById('keywell'), 'paddingTop')
+            + 6;  // margin under the lane / staff
+        return window.innerHeight - above - frame - 4;
+    }
+
     function sizeKeys() {
         const totalWhiteKeys = 7;
         const reserved = 40;
@@ -1932,15 +1951,19 @@
             // screen that floor used to claim more height than actually
             // exists, pushing the piano/staff below the visible viewport
             // instead of shrinking to fit it.
-            availableH = Math.max(160, window.innerHeight - chromeH - 76);
+            // Measured, not assumed: a fixed chromeH cut the bottom of the
+            // piano off under Chrome's toolbar on iPhone, where the page also
+            // starts below the sol-crios strip and the mode bar wraps to two
+            // rows. availableH here is the room for lane/staff + keys alone.
+            availableH = Math.max(160, roomBelowControls());
             // Keys get first claim on the space and a real floor — a small
             // phone in landscape is exactly when keys most need to stay
             // tappable — but the lane still needs enough room that its own
             // note circles (sized off key width, which stays generous on a
-            // wide landscape screen) don't get clipped inside it.
-            maxKeyH = Math.max(125, Math.min(220, availableH - 55));
-            const idealLaneH = Math.max(55, Math.min(150, Math.round(whiteW * 2.1)));
-            laneH = Math.max(55, Math.min(idealLaneH, availableH - maxKeyH));
+            // wide landscape screen) don't get clipped inside it. The staff
+            // in "לנסות לבד" needs its own 86px floor plus its 8px gap.
+            const aboveKeys = soloMode ? 94 : 55;
+            maxKeyH = Math.max(125, Math.min(220, availableH - aboveKeys));
         } else {
             availableH = Math.max(320, window.innerHeight - chromeH);
             // Standing rule across every song page: video gets ~45% of the
@@ -1953,6 +1976,11 @@
         if (keyH > maxKeyH) {
             keyH = maxKeyH;
             whiteW = Math.max(24, Math.floor(keyH / 3.2));
+        }
+
+        if (mode === 'practice' && !soloMode) {
+            const idealLaneH = Math.max(55, Math.min(150, Math.round(whiteW * 2.1)));
+            laneH = Math.max(55, Math.min(idealLaneH, availableH - keyH));
         }
 
         const blackW = Math.round(whiteW * 0.495);
